@@ -5,6 +5,8 @@ import { marked } from 'marked';
 
 // Drop a .md file in content/blog/ and it becomes a post at /blog/<file-name>.
 // Files starting with "_" (like _template.md) are skipped.
+// Set `published: false` in a post's frontmatter to hide it (it's left out of
+// the list and its page 404s). Posts without the field are published.
 const BLOG_DIR = path.join(process.cwd(), 'content', 'blog');
 
 export type PostMeta = {
@@ -34,12 +36,15 @@ const toMeta = (slug: string, data: Record<string, unknown>): PostMeta => ({
   tags: Array.isArray(data.tags) ? data.tags.map(String) : [],
 });
 
+const isPublished = (data: Record<string, unknown>) => data.published !== false;
+
 export function getPostSlugs(): string[] {
   if (!fs.existsSync(BLOG_DIR)) return [];
   return fs
     .readdirSync(BLOG_DIR)
     .filter((file) => file.endsWith('.md') && !file.startsWith('_'))
-    .map((file) => file.replace(/\.md$/, ''));
+    .map((file) => file.replace(/\.md$/, ''))
+    .filter((slug) => isPublished(readPostFile(slug).data));
 }
 
 export function getAllPosts(): PostMeta[] {

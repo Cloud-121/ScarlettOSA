@@ -1,24 +1,31 @@
-# Step 1: Use official Node.js image
-FROM node:18 AS build
+# syntax=docker/dockerfile:1
 
-# Step 2: Set working directory
+FROM node:22-alpine AS deps
 WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
 
-# Step 3: Copy package files
-COPY package*.json ./
-
-# Step 4: Install dependencies
-RUN npm install --verbose
-
-# Step 5: Copy the rest of the application (including public folder)
+FROM node:22-alpine AS build
+WORKDIR /app
+ENV NEXT_TELEMETRY_DISABLED=1
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-
-# Step 6: Build the application
 RUN npm run build
 
+FROM node:22-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1 \
+    PORT=3000 \
+    HOSTNAME=0.0.0.0
 
-# Step 7: Expose the port Next.js will run on
+# Standalone server + static assets
+COPY --from=build --chown=node:node /app/.next/standalone ./
+COPY --from=build --chown=node:node /app/.next/static ./.next/static
+COPY --from=build --chown=node:node /app/public ./public
+# Blog markdown is read from disk at runtime (lib/blog.ts)
+COPY --from=build --chown=node:node /app/content ./content
+
+USER node
 EXPOSE 3000
-
-# Step 8: Run the app in production mode
-CMD ["npm", "start"]
+CMD ["node", "server.js"]

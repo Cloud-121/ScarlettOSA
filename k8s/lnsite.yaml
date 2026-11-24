@@ -1,0 +1,92 @@
+# Apply with: kubectl apply -f k8s/lnsite.yaml
+# Redeploy after a new image is pushed: kubectl -n lnsite rollout restart deploy/lnsite
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: lnsite
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lnsite
+  namespace: lnsite
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: lnsite
+  template:
+    metadata:
+      labels:
+        app: lnsite
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+      containers:
+        - name: lnsite
+          image: ghcr.io/cloud-121/scarlettosa:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 3000
+          env:
+            - name: ANALYZER_API_URL
+              value: https://analyzer.gulfcoastmesh.org
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lnsite
+  namespace: lnsite
+spec:
+  selector:
+    app: lnsite
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+---
+# k3s ships with Traefik as the default ingress controller.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: lnsite
+  namespace: lnsite
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: lnsite.home.lan # CHANGE ME: your hostname
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: lnsite
+                port:
+                  name: http

@@ -512,3 +512,28 @@ html.dark {
     display: none;
   }
 }
+
+/* Ko-fi floating button (components/KofiWidget.tsx): Ko-fi pins it bottom-left
+   in a 180px box, which clips "Support my work". Move it (and the popup it
+   opens) to the bottom-right and widen the box to fit the button. */
+.floatingchat-container-wrap,
+.floatingchat-container-wrap-mobi {
+  left: auto !important;
+  right: 16px !important;
+  width: 224px !important;
+  max-width: 224px !important;
+}
+.floatingchat-container,
+.floatingchat-container-mobi {
+  width: 224px !important;
+}
+.floating-chat-kofi-popup-iframe,
+.floating-chat-kofi-popup-iframe-mobi {
+  left: auto !important;
+  right: 16px !important;
+}
+@media print {
+  [id^='kofi-widget-overlay'] {
+    display: none !important;
+  }
+}

@@ -3,6 +3,7 @@ title: Build a radio they said, It would be fun they said.
 date: 2026-10-25
 description: My experience designing, building, and dealing with the production issues of a new product.
 tags: [PCB Design, Hardware Design, RF Design, Ham Radio]
+published: false
 ---
 
 ## The Grumpy Board, How it started, and the many mistakes I made.

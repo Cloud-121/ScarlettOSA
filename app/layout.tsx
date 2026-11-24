@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Fredoka, Geist, Geist_Mono } from 'next/font/google';
 import Background from '@/components/Background';
+import KofiWidget from '@/components/KofiWidget';
 import './globals.css';
 
 const geistSans = Geist({
@@ -40,6 +41,7 @@ export default function RootLayout({
       >
         <Background />
         <div className="site-content">{children}</div>
+        <KofiWidget />
       </body>
     </html>
   );
